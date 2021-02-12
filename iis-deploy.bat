@@ -30,25 +30,23 @@ IF NOT EXIST %windir%\system32\inetsrv\appcmd.exe (
 
 :install
 
-for %%i in ("%~dp0.") do SET "CURR_DIR_NAME=%%~fi"
-for %%I in (.) do set CURR_DIR_PATH=%%~nxI
-::echo %CURR_DIR_PATH%
+:: root app is in the parent folder
+set ROOT_RELATIVE_PATH=.
+for %%i in ("%~dp0%ROOT_RELATIVE_PATH%") do SET "ROOT_DIR_NAME=%%~fi"
+for %%I in (%ROOT_RELATIVE_PATH%) do set ROOT_DIR_PATH=%%~nxI
+:: echo %ROOT_DIR_NAME%, %ROOT_DIR_PATH%
 
 :: Default settings
-::SET CWD=%~dp0
-::SET PYTHON_EXE=%CWD%env\Scripts\python.exe
 SET PYTHON_HOME=c:\Python39
 SET PYTHON_EXE=%PYTHON_HOME%\python.exe
-SET PROJECT_NAME=%CURR_DIR_PATH%
+SET PROJECT_NAME=%ROOT_DIR_PATH%
 SET SITE_NAME=%PROJECT_NAME%
-::SET SITE_PHYSIC_PATH=%~dp0
-SET SITE_PHYSIC_PATH=%CURR_DIR_NAME%
+SET SITE_PHYSIC_PATH=%ROOT_DIR_NAME%
 SET SITE_URL=*
 SET SITE_PORT=5000
 SET SITE_HOST_NAME=
 SET SITE_PROTOCOL=http
 SET WSGI_HANDLER=app.app
-
 
 IF NOT EXIST %PYTHON_EXE% (
     SET /p PYTHON_EXE="Enter python.exe path (%PYTHON_EXE%):" %=%
@@ -62,9 +60,9 @@ IF [%1] == [/v] (
 	SET /p SITE_NAME="Enter IIS site name (%PROJECT_NAME%):" %=%
 	SET /p SITE_PROTOCOL="Enter http|https for protocol (%SITE_PROTOCOL%): " %=%
 	SET /p SITE_URL="Enter site url (%SITE_URL%):" %=%
-	SET /p SITE_PORT="Enter port (%SITE_PORT%):" %=%
 	SET /p WSGI_HANDLER="Enter WSGI Handler (%WSGI_HANDLER%):" %=%
 )
+SET /p SITE_PORT="Enter port (%SITE_PORT%):" %=%
 
 IF %SITE_URL%==localhost (
     SET SITE_URL=*
@@ -75,11 +73,12 @@ ECHO press Ctrl+C to break or any key to start installation...
 pause
 ::goto env
 
+:wfastcgi
 ECHO .
-ECHO ... Install wfastcgi
-%PYTHON_HOME%\python -m pip install wfastcgi
-ECHO ... Enable wfastcgi
-%PYTHON_HOME%\Scripts\wfastcgi-enable
+SET WFASTCGI_TGZ=wfastcgi-3.0.0.tar.gz
+IF NOT EXIST %WFASTCGI_TGZ% SET WFASTCGI_TGZ=wfastcgi
+ECHO ... Install %WFASTCGI_TGZ%
+%PYTHON_HOME%\python -m pip install %WFASTCGI_TGZ%
 
 ::SET WFCGI_FILE=%SITE_PHYSIC_PATH%wfastcgi.py
 SET WFCGI_FILE=%PYTHON_HOME%\Lib\site-packages\wfastcgi.py
@@ -87,7 +86,10 @@ IF NOT EXIST %WFCGI_FILE% (
     SET /p WFCGI_FILE="Please enter full path for wfastcgi.py: " %=%
 )
 
-:fastcgi
+ECHO ... Enable wfastcgi
+%PYTHON_HOME%\Scripts\wfastcgi-enable
+
+:fastcgi_iis
 ECHO .
 ECHO ... Install FASTCGI for IIS. Please wait.
 :: https://stackoverflow.com/questions/8054282/how-can-you-programmatically-turn-off-or-on-windows-features#:~:text=Currently%2C%20users%20must%20go%20into,that%20they%20want%20to%20activate.
