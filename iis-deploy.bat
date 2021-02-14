@@ -30,18 +30,18 @@ IF NOT EXIST %windir%\system32\inetsrv\appcmd.exe (
 
 :install
 
-:: root app is in the parent folder
-set ROOT_RELATIVE_PATH=.
-for %%i in ("%~dp0%ROOT_RELATIVE_PATH%") do SET "ROOT_DIR_NAME=%%~fi"
-for %%I in (%ROOT_RELATIVE_PATH%) do set ROOT_DIR_PATH=%%~nxI
-:: echo %ROOT_DIR_NAME%, %ROOT_DIR_PATH%
-
 :: Default settings
 SET PYTHON_HOME=c:\Python39
 SET PYTHON_EXE=%PYTHON_HOME%\python.exe
-SET PROJECT_NAME=%ROOT_DIR_PATH%
+:: root app is in the parent folder
+SET ROOT_RELATIVE_PATH=..
+for %%i in ("%~dp0%ROOT_RELATIVE_PATH%") do SET "ROOT_DIR_PATH=%%~fi"
+for %%I in (%ROOT_RELATIVE_PATH%) do set ROOT_DIR_NAME=%%~nxI
+ECHO Root dir name: "%ROOT_DIR_NAME%", full path: "%ROOT_DIR_PATH%"
+
+SET PROJECT_NAME=%ROOT_DIR_NAME%
 SET SITE_NAME=%PROJECT_NAME%
-SET SITE_PHYSIC_PATH=%ROOT_DIR_NAME%
+SET SITE_PHYSIC_PATH=%ROOT_DIR_PATH%
 SET SITE_URL=*
 SET SITE_PORT=5000
 SET SITE_HOST_NAME=
@@ -49,11 +49,12 @@ SET SITE_PROTOCOL=http
 SET WSGI_HANDLER=app.app
 
 IF NOT EXIST %PYTHON_EXE% (
-    SET /p PYTHON_EXE="Enter python.exe path (%PYTHON_EXE%):" %=%
+    SET /p PYTHON_HOME="Enter python.exe path (%PYTHON_HOME%):" %=%
+    SET PYTHON_EXE=%PYTHON_HOME%\python.exe
 )
 
 :: Gathering information
-IF [%1] == [/v] (
+IF [%1] == [v] (
 	SET /p PROJECT_NAME="Enter project name (%PROJECT_NAME%):" %=%
 	SET SITE_NAME=%PROJECT_NAME%
 	SET /p SITE_PHYSIC_PATH="Enter project directory, which contain manage.py (%SITE_PHYSIC_PATH%): " %=%
